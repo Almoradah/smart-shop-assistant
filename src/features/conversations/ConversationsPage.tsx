@@ -88,12 +88,12 @@ export default function ConversationsPage() {
           <div className="flex flex-wrap gap-4">
             <div className="w-[150px]">
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Channel</label>
-              <Select value={channelFilter} onValueChange={setChannelFilter}>
+              <Select value={channelFilter || "all"} onValueChange={(v) => setChannelFilter(v === "all" ? "" : v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Channels" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Channels</SelectItem>
+                  <SelectItem value="all">All Channels</SelectItem>
                   <SelectItem value="web">Web</SelectItem>
                   <SelectItem value="whatsapp">WhatsApp</SelectItem>
                   <SelectItem value="telegram">Telegram</SelectItem>
