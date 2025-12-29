@@ -123,12 +123,12 @@ export default function ProductsPage() {
           className="flex-1 max-w-md"
         />
         <div className="flex gap-3">
-          <Select value={brandFilter} onValueChange={setBrandFilter}>
+          <Select value={brandFilter || "all"} onValueChange={(v) => setBrandFilter(v === "all" ? "" : v)}>
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="All Brands" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Brands</SelectItem>
+              <SelectItem value="all">All Brands</SelectItem>
               <SelectItem value="apple">Apple</SelectItem>
               <SelectItem value="samsung">Samsung</SelectItem>
               <SelectItem value="google">Google</SelectItem>
@@ -136,12 +136,12 @@ export default function ProductsPage() {
               <SelectItem value="xiaomi">Xiaomi</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+          <Select value={availabilityFilter || "all"} onValueChange={(v) => setAvailabilityFilter(v === "all" ? "" : v)}>
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Availability" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Status</SelectItem>
+              <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="in_stock">In Stock</SelectItem>
               <SelectItem value="low_stock">Low Stock</SelectItem>
               <SelectItem value="out_of_stock">Out of Stock</SelectItem>
