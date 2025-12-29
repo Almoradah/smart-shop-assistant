@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import LoginPage from "@/features/auth/LoginPage";
 import DashboardPage from "@/features/dashboard/DashboardPage";
 import ProductsPage from "@/features/products/ProductsPage";
+import ProductDetailPage from "@/features/products/ProductDetailPage";
 import KnowledgePage from "@/features/knowledge/KnowledgePage";
 import ConversationsPage from "@/features/conversations/ConversationsPage";
 import ConversationDetailPage from "@/features/conversations/ConversationDetailPage";
@@ -29,6 +30,7 @@ function AppRoutes() {
       
       <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
+      <Route path="/products/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
       <Route path="/knowledge" element={<ProtectedRoute><KnowledgePage /></ProtectedRoute>} />
       <Route path="/conversations" element={<ProtectedRoute><ConversationsPage /></ProtectedRoute>} />
       <Route path="/conversations/:id" element={<ProtectedRoute><ConversationDetailPage /></ProtectedRoute>} />

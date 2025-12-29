@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { SearchInput } from '@/components/shared/SearchInput';
@@ -10,8 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, 
-  Search, 
-  Filter, 
   MoreHorizontal,
   Edit,
   Trash2,
@@ -44,13 +43,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import ProductFormModal from './ProductFormModal';
 
 export default function ProductsPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [brandFilter, setBrandFilter] = useState<string>('');
   const [availabilityFilter, setAvailabilityFilter] = useState<string>('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [formModalOpen, setFormModalOpen] = useState(false);
 
   const { data: products, isLoading } = useProducts({
     search,
@@ -106,7 +108,7 @@ export default function ProductsPage() {
               <Upload className="h-4 w-4 mr-2" />
               Bulk Upload
             </Button>
-            <Button>
+            <Button onClick={() => setFormModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Product
             </Button>
@@ -162,7 +164,7 @@ export default function ProductsPage() {
             title="No products found"
             description="Try adjusting your search or filters to find what you're looking for."
             action={
-              <Button>
+              <Button onClick={() => setFormModalOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Product
               </Button>
@@ -198,7 +200,11 @@ export default function ProductsPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {products?.data.map((product) => (
-                  <tr key={product.id} className="hover:bg-muted/30 transition-colors">
+                  <tr 
+                    key={product.id} 
+                    className="hover:bg-muted/30 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/products/${product.id}`)}
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
@@ -229,7 +235,7 @@ export default function ProductsPage() {
                     <td className="px-6 py-4">
                       <span className="text-sm text-muted-foreground">{formatDate(product.updatedAt)}</span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
@@ -237,11 +243,11 @@ export default function ProductsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/products/${product.id}`)}>
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/products/${product.id}`)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
@@ -286,6 +292,12 @@ export default function ProductsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Product Form Modal */}
+      <ProductFormModal
+        open={formModalOpen}
+        onOpenChange={setFormModalOpen}
+      />
     </DashboardLayout>
   );
 }
