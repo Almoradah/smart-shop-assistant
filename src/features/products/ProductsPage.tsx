@@ -84,6 +84,16 @@ export default function ProductsPage() {
     }
   };
 
+  const getOverallAvailability = (variants: { availability: string }[]) => {
+    if (variants.some(v => v.availability === 'in_stock')) return 'in_stock';
+    if (variants.some(v => v.availability === 'low_stock')) return 'low_stock';
+    return 'out_of_stock';
+  };
+
+  const getTotalStock = (variants: { stock: number }[]) => {
+    return variants.reduce((sum, v) => sum + v.stock, 0);
+  };
+
   const getAvailabilityBadge = (availability: string) => {
     switch (availability) {
       case 'in_stock':
@@ -179,13 +189,13 @@ export default function ProductsPage() {
                     Product
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-4">
-                    Price
+                    Base Price
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-4">
-                    Stock
+                    Total Stock
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-4">
-                    Status
+                    Variants
                   </th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-6 py-4">
                     RAG Index
@@ -217,13 +227,16 @@ export default function ProductsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-medium text-foreground">{formatCurrency(product.price)}</span>
+                      <span className="font-medium text-foreground">{formatCurrency(product.basePrice)}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-foreground">{product.stock}</span>
+                      <span className="text-foreground">{getTotalStock(product.variants)}</span>
                     </td>
                     <td className="px-6 py-4">
-                      {getAvailabilityBadge(product.availability)}
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{product.variants.length}</Badge>
+                        {getAvailabilityBadge(getOverallAvailability(product.variants))}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       {product.ragIndexed ? (

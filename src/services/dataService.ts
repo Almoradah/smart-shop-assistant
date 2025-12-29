@@ -55,7 +55,10 @@ export const productService = {
       products = products.filter(p => p.brand.toLowerCase() === filters.brand?.toLowerCase());
     }
     if (filters?.availability) {
-      products = products.filter(p => p.availability === filters.availability);
+      // Filter products by checking if any variant matches the availability
+      products = products.filter(p => 
+        p.variants.some(v => v.availability === filters.availability)
+      );
     }
     if (filters?.search) {
       const search = filters.search.toLowerCase();
