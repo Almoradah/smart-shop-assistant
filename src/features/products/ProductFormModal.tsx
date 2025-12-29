@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -20,8 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, X, Loader2 } from 'lucide-react';
-import type { Product } from '@/types';
+import { Plus, X, Loader2, Trash2 } from 'lucide-react';
+import type { Product, ProductVariant } from '@/types';
 
 interface ProductFormModalProps {
   open: boolean;
@@ -34,6 +35,15 @@ interface SpecificationField {
   value: string;
 }
 
+interface VariantField {
+  id: string;
+  sku: string;
+  attributes: { key: string; value: string }[];
+  price: number;
+  stock: number;
+  availability: 'in_stock' | 'low_stock' | 'out_of_stock';
+}
+
 export default function ProductFormModal({ open, onOpenChange, product }: ProductFormModalProps) {
   const { toast } = useToast();
   const createProduct = useCreateProduct();
@@ -44,14 +54,13 @@ export default function ProductFormModal({ open, onOpenChange, product }: Produc
   const [formData, setFormData] = useState({
     brand: '',
     model: '',
-    price: 0,
-    stock: 0,
-    availability: 'in_stock' as 'in_stock' | 'low_stock' | 'out_of_stock',
+    basePrice: 0,
     description: '',
     ragIndexed: false,
   });
 
   const [specifications, setSpecifications] = useState<SpecificationField[]>([]);
+  const [variants, setVariants] = useState<VariantField[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [newImageUrl, setNewImageUrl] = useState('');
 
@@ -60,27 +69,41 @@ export default function ProductFormModal({ open, onOpenChange, product }: Produc
       setFormData({
         brand: product.brand,
         model: product.model,
-        price: product.price,
-        stock: product.stock,
-        availability: product.availability,
+        basePrice: product.basePrice,
         description: product.description || '',
         ragIndexed: product.ragIndexed,
       });
       setSpecifications(
         Object.entries(product.specifications || {}).map(([key, value]) => ({ key, value }))
       );
+      setVariants(
+        product.variants.map(v => ({
+          id: v.id,
+          sku: v.sku,
+          attributes: Object.entries(v.attributes).map(([key, value]) => ({ key, value })),
+          price: v.price,
+          stock: v.stock,
+          availability: v.availability,
+        }))
+      );
       setImages(product.images || []);
     } else {
       setFormData({
         brand: '',
         model: '',
-        price: 0,
-        stock: 0,
-        availability: 'in_stock',
+        basePrice: 0,
         description: '',
         ragIndexed: false,
       });
       setSpecifications([]);
+      setVariants([{ 
+        id: crypto.randomUUID(), 
+        sku: '', 
+        attributes: [{ key: 'Storage', value: '' }, { key: 'Color', value: '' }], 
+        price: 0, 
+        stock: 0, 
+        availability: 'in_stock' 
+      }]);
       setImages([]);
     }
   }, [product, open]);
@@ -95,9 +118,24 @@ export default function ProductFormModal({ open, onOpenChange, product }: Produc
       return acc;
     }, {} as Record<string, string>);
 
+    const formattedVariants: ProductVariant[] = variants.map(v => ({
+      id: v.id,
+      sku: v.sku,
+      attributes: v.attributes.reduce((acc, { key, value }) => {
+        if (key.trim() && value.trim()) {
+          acc[key.trim()] = value.trim();
+        }
+        return acc;
+      }, {} as Record<string, string>),
+      price: v.price,
+      stock: v.stock,
+      availability: v.availability,
+    }));
+
     const productData = {
       ...formData,
       specifications: specs,
+      variants: formattedVariants,
       images,
     };
 
@@ -139,6 +177,47 @@ export default function ProductFormModal({ open, onOpenChange, product }: Produc
     setSpecifications(updated);
   };
 
+  const addVariant = () => {
+    setVariants([...variants, { 
+      id: crypto.randomUUID(), 
+      sku: '', 
+      attributes: [{ key: 'Storage', value: '' }, { key: 'Color', value: '' }], 
+      price: formData.basePrice, 
+      stock: 0, 
+      availability: 'in_stock' 
+    }]);
+  };
+
+  const removeVariant = (index: number) => {
+    if (variants.length > 1) {
+      setVariants(variants.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateVariant = (index: number, field: keyof VariantField, value: any) => {
+    const updated = [...variants];
+    (updated[index] as any)[field] = value;
+    setVariants(updated);
+  };
+
+  const addVariantAttribute = (variantIndex: number) => {
+    const updated = [...variants];
+    updated[variantIndex].attributes.push({ key: '', value: '' });
+    setVariants(updated);
+  };
+
+  const removeVariantAttribute = (variantIndex: number, attrIndex: number) => {
+    const updated = [...variants];
+    updated[variantIndex].attributes = updated[variantIndex].attributes.filter((_, i) => i !== attrIndex);
+    setVariants(updated);
+  };
+
+  const updateVariantAttribute = (variantIndex: number, attrIndex: number, field: 'key' | 'value', value: string) => {
+    const updated = [...variants];
+    updated[variantIndex].attributes[attrIndex][field] = value;
+    setVariants(updated);
+  };
+
   const addImage = () => {
     if (newImageUrl.trim()) {
       setImages([...images, newImageUrl.trim()]);
@@ -154,7 +233,7 @@ export default function ProductFormModal({ open, onOpenChange, product }: Produc
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Product' : 'Add New Product'}</DialogTitle>
         </DialogHeader>
@@ -196,50 +275,18 @@ export default function ProductFormModal({ open, onOpenChange, product }: Produc
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">Price ($)</Label>
-              <Input
-                id="price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="stock">Stock</Label>
-              <Input
-                id="stock"
-                type="number"
-                min="0"
-                value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="availability">Availability</Label>
-              <Select
-                value={formData.availability}
-                onValueChange={(v: 'in_stock' | 'low_stock' | 'out_of_stock') => 
-                  setFormData({ ...formData, availability: v })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="in_stock">In Stock</SelectItem>
-                  <SelectItem value="low_stock">Low Stock</SelectItem>
-                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="basePrice">Base Price ($)</Label>
+            <Input
+              id="basePrice"
+              type="number"
+              min="0"
+              step="0.01"
+              value={formData.basePrice}
+              onChange={(e) => setFormData({ ...formData, basePrice: parseFloat(e.target.value) || 0 })}
+              className="max-w-[200px]"
+              required
+            />
           </div>
 
           <div className="space-y-2">
@@ -293,6 +340,127 @@ export default function ProductFormModal({ open, onOpenChange, product }: Produc
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Variants */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Variants</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addVariant}>
+                <Plus className="h-4 w-4 mr-1" />
+                Add Variant
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              {variants.map((variant, vIndex) => (
+                <div key={variant.id} className="rounded-lg border border-border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline">Variant {vIndex + 1}</Badge>
+                    {variants.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => removeVariant(vIndex)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>SKU</Label>
+                      <Input
+                        placeholder="e.g., IPH15-256-BLK"
+                        value={variant.sku}
+                        onChange={(e) => updateVariant(vIndex, 'sku', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Price ($)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={variant.price}
+                        onChange={(e) => updateVariant(vIndex, 'price', parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Stock</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={variant.stock}
+                        onChange={(e) => updateVariant(vIndex, 'stock', parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Availability</Label>
+                      <Select
+                        value={variant.availability}
+                        onValueChange={(v: 'in_stock' | 'low_stock' | 'out_of_stock') => 
+                          updateVariant(vIndex, 'availability', v)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="in_stock">In Stock</SelectItem>
+                          <SelectItem value="low_stock">Low Stock</SelectItem>
+                          <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Variant Attributes */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm">Attributes</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => addVariantAttribute(vIndex)}
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                    {variant.attributes.map((attr, aIndex) => (
+                      <div key={aIndex} className="flex gap-2">
+                        <Input
+                          placeholder="Key (e.g., Storage)"
+                          value={attr.key}
+                          onChange={(e) => updateVariantAttribute(vIndex, aIndex, 'key', e.target.value)}
+                          className="flex-1"
+                        />
+                        <Input
+                          placeholder="Value (e.g., 256GB)"
+                          value={attr.value}
+                          onChange={(e) => updateVariantAttribute(vIndex, aIndex, 'value', e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeVariantAttribute(vIndex, aIndex)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Images */}

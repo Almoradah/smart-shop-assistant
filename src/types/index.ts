@@ -22,16 +22,24 @@ export interface LoginCredentials {
 }
 
 // Product Types
+export interface ProductVariant {
+  id: string;
+  sku: string;
+  attributes: Record<string, string>; // e.g., { storage: '256GB', color: 'Black' }
+  price: number;
+  stock: number;
+  availability: 'in_stock' | 'low_stock' | 'out_of_stock';
+}
+
 export interface Product {
   id: string;
   brand: string;
   model: string;
-  price: number;
-  stock: number;
-  availability: 'in_stock' | 'low_stock' | 'out_of_stock';
+  basePrice: number;
   description?: string;
   specifications?: Record<string, string>;
   images: string[];
+  variants: ProductVariant[];
   ragIndexed: boolean;
   createdAt: string;
   updatedAt: string;

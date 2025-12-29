@@ -30,7 +30,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import ProductFormModal from './ProductFormModal';
+import type { ProductVariant } from '@/types';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -103,6 +112,16 @@ export default function ProductDetailPage() {
       default:
         return <Badge variant="ghost" className="text-sm">{availability}</Badge>;
     }
+  };
+
+  const getTotalStock = (variants: ProductVariant[]) => {
+    return variants.reduce((sum, v) => sum + v.stock, 0);
+  };
+
+  const getOverallAvailability = (variants: ProductVariant[]) => {
+    if (variants.some(v => v.availability === 'in_stock')) return 'in_stock';
+    if (variants.some(v => v.availability === 'low_stock')) return 'low_stock';
+    return 'out_of_stock';
   };
 
   if (isLoading) {
@@ -222,6 +241,47 @@ export default function ProductDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Variants */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Variants ({product.variants.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-lg border border-border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30">
+                      <TableHead>SKU</TableHead>
+                      <TableHead>Attributes</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {product.variants.map((variant) => (
+                      <TableRow key={variant.id}>
+                        <TableCell className="font-mono text-sm">{variant.sku}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {Object.entries(variant.attributes).map(([key, value]) => (
+                              <Badge key={key} variant="outline" className="text-xs">
+                                {key}: {value}
+                              </Badge>
+                            ))}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">{formatCurrency(variant.price)}</TableCell>
+                        <TableCell>{variant.stock}</TableCell>
+                        <TableCell>{getAvailabilityBadge(variant.availability)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Sidebar */}
@@ -235,24 +295,31 @@ export default function ProductDetailPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <DollarSign className="h-4 w-4" />
-                  <span className="text-sm">Price</span>
+                  <span className="text-sm">Base Price</span>
                 </div>
-                <span className="font-semibold text-foreground">{formatCurrency(product.price)}</span>
+                <span className="font-semibold text-foreground">{formatCurrency(product.basePrice)}</span>
               </div>
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Package className="h-4 w-4" />
-                  <span className="text-sm">Stock</span>
+                  <span className="text-sm">Total Stock</span>
                 </div>
-                <span className="font-semibold text-foreground">{product.stock} units</span>
+                <span className="font-semibold text-foreground">{getTotalStock(product.variants)} units</span>
               </div>
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <span className="text-sm">Status</span>
                 </div>
-                {getAvailabilityBadge(product.availability)}
+                {getAvailabilityBadge(getOverallAvailability(product.variants))}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span className="text-sm">Variants</span>
+                </div>
+                <Badge variant="outline">{product.variants.length}</Badge>
               </div>
               
               <div className="flex items-center justify-between">
