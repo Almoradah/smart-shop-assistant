@@ -17,12 +17,14 @@ import {
   Sun,
   LogOut,
   Cpu,
+  ShoppingCart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Products', href: '/products', icon: Smartphone },
+  { name: 'Orders', href: '/orders', icon: ShoppingCart },
   { name: 'Knowledge Base', href: '/knowledge', icon: BookOpen },
   { name: 'Conversations', href: '/conversations', icon: MessageSquare },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },

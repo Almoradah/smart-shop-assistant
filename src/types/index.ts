@@ -156,6 +156,55 @@ export interface AISettings {
   confidenceThreshold: number;
 }
 
+// Order Types
+export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+
+export interface OrderItem {
+  id: string;
+  productId: string;
+  productName: string;
+  variantId: string;
+  variantSku: string;
+  variantAttributes: Record<string, string>;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface Order {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  items: OrderItem[];
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  total: number;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  shippingAddress: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderFilters {
+  status?: OrderStatus;
+  paymentStatus?: PaymentStatus;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 // Dashboard Types
 export interface DashboardKPIs {
   totalProducts: number;
