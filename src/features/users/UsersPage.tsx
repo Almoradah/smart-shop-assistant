@@ -93,7 +93,7 @@ export default function UsersPage() {
         title="Users"
         description="Manage team members and permissions"
         actions={
-          <Button disabled>
+          <Button onClick={() => toast({ title: 'Coming soon', description: 'User invitation feature will be available soon.' })}>
             <Plus className="h-4 w-4 mr-2" />
             Invite User
           </Button>
@@ -235,7 +235,7 @@ export default function UsersPage() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="bg-popover border border-border shadow-lg z-50">
                           <DropdownMenuLabel>Change Role</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
